@@ -936,6 +936,15 @@
       }
 
       // script.js (trecho em torno de updatePhaseData)
+      async function readPhaseSold(phaseId) {
+  const data = contract.interface.encodeFunctionData('phaseSold', [phaseId]);
+  const result = await provider.call({
+    to: contract.address,
+    data
+  });
+  return contract.interface.decodeFunctionResult('phaseSold', result)[0];
+}
+
 
 async function updatePhaseData() {
   try {
