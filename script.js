@@ -935,36 +935,38 @@
         }
       }
 
-      async function updatePhaseData() {
-        try {
-          const info = await contract.getCurrentPhaseInfo();
-          const phaseName = info.name;
-          const sold = Number(ethers.utils.formatUnits(info.sold, 18));
-          const cap = Number(ethers.utils.formatUnits(info.cap, 18));
-          const percent = Math.floor((sold / cap) * 100);
-          const rate = Number(ethers.utils.formatUnits(info.rate, 0));
-          const price = (1 / rate).toFixed(7);
+      // script.js (trecho em torno de updatePhaseData)
 
-          document.getElementById(
-            "phaseStatus"
-          ).innerHTML = `<i class="fas fa-ship"></i> Fase ativa: ${phaseName}`;
-          document.getElementById("sold1").innerText =
-            sold.toLocaleString("pt-BR");
-          document.getElementById("percent1").innerText = percent;
-          document.getElementById("progress1").style.width = `${percent}%`;
-          document.getElementById("totalRaised").innerText =
-            sold.toLocaleString("pt-BR");
+async function updatePhaseData() {
+  try {
+    // Exemplo de chamada que estava falhando:
+    const sold1 = await contract.phaseSold(1);
+    document.getElementById('sold1').innerText = formatNumber(sold1);
+    // ... demais chamadas para phaseSold(2), phaseSold(3), etc.
+  } catch (error) {
+    // Se for “circuit breaker open”, trate de forma amigável:
+    if (error.data?.isBrokenCircuitError) {
+      console.warn('Circuit breaker aberto — pulando updatePhaseData');
+      // Atualiza algum indicador visual na tela:
+      document.getElementById('phaseStatus').innerText =
+        'Serviço temporariamente indisponível';
+      document.getElementById('phaseStatus').classList.add('text-red-500');
+      // Agenda uma nova tentativa em 10 segundos:
+      setTimeout(updatePhaseData, 10000);
+    } else {
+      // Erros genéricos: logue e mostre aviso ao usuário
+      console.error('Erro ao atualizar dados:', error);
+      document.getElementById('phaseStatus').innerText =
+        'Falha ao atualizar dados';
+      document.getElementById('phaseStatus').classList.add('text-yellow-500');
+    }
+  }
+}
 
-          // Atualiza o preço
-          document
-            .getElementById("phase1-box")
-            .querySelector("p").textContent = `Preço: ${price} BNB`;
+// E chame a atualização num loop controlado:
+updatePhaseData();               // primeira vez
+setInterval(updatePhaseData, 30000);  // a cada 30s
 
-          recalcReceive();
-        } catch (e) {
-          console.error("Erro ao atualizar dados:", e);
-        }
-      }
 
       function recalcReceive() {
         const bnbVal = parseFloat(document.getElementById("bnbAmount").value);
