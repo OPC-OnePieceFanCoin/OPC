@@ -939,29 +939,24 @@
 
 async function updatePhaseData() {
   try {
-    // Exemplo de chamada que estava falhando:
-    const sold1 = await contract.phaseSold(1);
+    const sold1 = await contract.callStatic.phaseSold(1);
     document.getElementById('sold1').innerText = formatNumber(sold1);
-    // ... demais chamadas para phaseSold(2), phaseSold(3), etc.
+    // ...
+    const totalRaised = await contract.callStatic.totalRaised();
+    document.getElementById('totalRaised').innerText =
+      ethers.utils.formatEther(totalRaised);
   } catch (error) {
-    // Se for “circuit breaker open”, trate de forma amigável:
+    // tratamento igual ao que mostramos antes
     if (error.data?.isBrokenCircuitError) {
-      console.warn('Circuit breaker aberto — pulando updatePhaseData');
-      // Atualiza algum indicador visual na tela:
-      document.getElementById('phaseStatus').innerText =
-        'Serviço temporariamente indisponível';
-      document.getElementById('phaseStatus').classList.add('text-red-500');
-      // Agenda uma nova tentativa em 10 segundos:
+      console.warn('RPC indisponível — tentando de novo em 10s');
       setTimeout(updatePhaseData, 10000);
     } else {
-      // Erros genéricos: logue e mostre aviso ao usuário
-      console.error('Erro ao atualizar dados:', error);
-      document.getElementById('phaseStatus').innerText =
-        'Falha ao atualizar dados';
-      document.getElementById('phaseStatus').classList.add('text-yellow-500');
+      console.error('Erro inesperado na leitura on-chain:', error);
+      setTimeout(updatePhaseData, 30000);
     }
   }
 }
+
 
 // E chame a atualização num loop controlado:
 updatePhaseData();               // primeira vez
