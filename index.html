@@ -896,7 +896,7 @@
                   type="number"
                   id="bnbAmount"
                   placeholder="0.0"
-                  min="0"
+                  min="0.001"
                   step="0.0001"
                 />
               </div>
@@ -2008,8 +2008,8 @@
       document.getElementById("buyBtn").addEventListener("click", async () => {
         if (!signer) return await connectWallet();
         const bnbVal = parseFloat(document.getElementById("bnbAmount").value);
-        if (isNaN(bnbVal) || bnbVal < 0.05 || bnbVal > 5) {
-          alert("Valor inválido (mín. 0.05, máx. 5 BNB).");
+        if (isNaN(bnbVal) || bnbVal < 0.001 || bnbVal > 5) {
+          alert("Valor inválido (mín. 0.001, máx. 5 BNB).");
           return;
         }
         try {
